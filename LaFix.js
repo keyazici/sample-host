@@ -1,15 +1,7 @@
-/*	Author: ntoombs19
- *	Name: LA Enhancer
- *	Version: 1.10
- *	Client script: javascript:window.top.$.getScript('https://dl.dropboxusercontent.com/u/26362756/laEnhancer/test.js');void(0); */
-
-/**********************************************************************
- *	Global variables
- */
-var version = "1.12 Unofficial";
+var version = "1.13 Unknown";
 var quickChangedLog =
   "<ul><li>Quick fix to let LA Enhancer be loaded from any page</li><li>Resolved bug that required skipping the first row when sending with hotkeys</li></ul>";
-var scriptName = "LA Enhancer - Updated by LilGhost";
+var scriptName = "LA Enhancer";
 var scriptURL = "https://www.tribalwars.top/tribalwars/laEnhancer/";
 var updateNotesURL =
   "http://forum.tribalwars.net/showthread.php?266604-ntoombs19-s-FA-Filter&p=6785655&viewfull=1#post6785655";
@@ -113,7 +105,6 @@ var keyPressSettings = {
   priorityThreeButton: "Skip",
   defaultButton: "Skip",
 };
-var availableLangs = ["en", "es", "el", "ar", "it"];
 
 /**********************************************************************
  *	Init script
@@ -121,27 +112,14 @@ var availableLangs = ["en", "es", "el", "ar", "it"];
 // Enables caching of loaded javascript before loading resources
 
 window.top.$.getScript(scriptURL + "lib/jstorage.js", function () {
-  window.top.$.getScript(
-    scriptURL + "resources.js",
-
-    function () {
-      if (window.top.$.jStorage.get("language") == null) {
-        setDefaultLanguage();
-      }
-
-      window.top.$.getScript(scriptURL + "lang/" + window.top.$.jStorage.get("language") + ".js", function () {
-        checkPage();
-      });
-    }
-  );
+  window.top.$.getScript(scriptURL + "resources.js", function () {
+    checkPage();
+  });
 
   window.top.$.getScript(scriptURL + "notify.js");
 });
 
 function run() {
-  checkVersion();
-  checkWorking();
-  setVersion();
   makeItPretty();
   showSettings();
   turnOnHotkeys();
@@ -149,85 +127,6 @@ function run() {
   if (userset[s.enable_auto_run] != false) {
     applySettings();
   }
-}
-
-function checkVersion() {
-  if (getVersion() != version) {
-    buttons = [
-      {
-        text: "OK",
-        callback: null,
-        confirm: true,
-      },
-    ];
-    if (clearProfiles) {
-      var profileList = window.top.$.jStorage.get("profileList");
-      window.top.$.each(profileList, function (i, val) {
-        window.top.$.jStorage.deleteKey("profile:" + val);
-      });
-      window.top.$.jStorage.set("keyPressSettings", keyPressSettings);
-      Dialog.show(
-        "update_dialog",
-        "This script has recently been updated to version <span style='font-weight:bold;'>" +
-          version +
-          "</span> and in order for the new version to work, all profiles and settings must be reset. Sorry for any inconvenience.<br /><br/><a href='" +
-          updateNotesURL +
-          "' target='_blank'>See what's new</a>"
-      );
-    } else {
-      Dialog.show(
-        "update_dialog",
-        "This script has recently been updated to version <span style='font-weight:bold;'>" +
-          version +
-          "</span><br/><br/>Unofficial Patches Channel Log:<br/>" +
-          quickChangedLog +
-          "<br/><br/><a href='" +
-          updateNotesURL +
-          "' target='_blank'>See what's new in official release changes</a>"
-      );
-    }
-  } else {
-    //window.top.UI.SuccessMessage("Welcome to LA Enhancer", 1000);
-  }
-}
-
-function checkWorking() {
-  var acknowledged = window.top.$.jStorage.get("working");
-  if (acknowledged == null) {
-    window.top.$.jStorage.set("working", false);
-  }
-  if (getVersion() != version) {
-    window.top.$.jStorage.set("working", false);
-  }
-  if (working == false && acknowledged == false) {
-    buttons = [
-      {
-        text: "OK",
-        callback: null,
-        confirm: true,
-      },
-    ];
-    window.top.UI.ConfirmationBox(
-      "An error has been discovered in this version. You may continue testing the script if you haven't noticed the error.",
-      buttons,
-      false,
-      []
-    );
-    window.top.$.jStorage.set("working", true);
-  }
-}
-
-function setVersion() {
-  window.top.$.jStorage.set("version", version);
-}
-
-function getVersion() {
-  var ver = window.top.$.jStorage.get("version");
-  if (ver == undefined) {
-    setVersion();
-    return version;
-  }
-  return ver;
 }
 
 /**********************************************************************
@@ -608,8 +507,6 @@ function showSettings() {
       )
     );
   formatSettings();
-  addLanguages();
-  window.top.$("#language option[value='" + window.top.$.jStorage.get("language") + "']").attr("selected", "selected");
 }
 
 function formatSettings() {
