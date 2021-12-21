@@ -1438,9 +1438,9 @@ function tryClick(button) {
       } else {
         button.click();
         if (userset[s.next_village_scouts] || userset[s.next_village_farming_troops]) {
-          doTime(200);
+          doTime(190);
         } else {
-          doTime(200);
+          doTime(190);
         }
       }
     }
