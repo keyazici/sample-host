@@ -1,10 +1,7 @@
-var version = "1.13 Unknown";
-var quickChangedLog =
-  "<ul><li>Quick fix to let LA Enhancer be loaded from any page</li><li>Resolved bug that required skipping the first row when sending with hotkeys</li></ul>";
+var version = "1.13";
 var scriptName = "LA Enhancer";
-var scriptURL = "https://www.tribalwars.top/tribalwars/laEnhancer/";
-var updateNotesURL =
-  "http://forum.tribalwars.net/showthread.php?266604-ntoombs19-s-FA-Filter&p=6785655&viewfull=1#post6785655";
+var scriptURL = "https://scripts.ibragonza.nl/enhancer/";
+var updateNotesURL = "https://forum.tribalwars.net/index.php?threads/ntoombs19s-fa-filter.266604/page-15#post-7053294";
 var working = true;
 var resourcesLoaded = false;
 var scriptLoaded = false;
@@ -24,7 +21,6 @@ var sitter = "";
 if (window.top.game_data.player.sitter != "0") {
   sitter = "t=" + window.top.game_data.player.id + "&";
 }
-
 var link = ["https://" + window.location.host + "/game.php?" + sitter + "village=", "&screen=am_farm"];
 var userset;
 var s = {
@@ -70,15 +66,7 @@ var s = {
   farming_troops_left: 39,
   next_village_units: 40,
 };
-var keycodes = {
-  a: 65,
-  b: 66,
-  c: 67,
-  skip: 83,
-  right: 39,
-  left: 37,
-  master: 77,
-};
+var keycodes = { a: 65, b: 66, c: 67, skip: 83, right: 39, left: 37, master: 77 };
 var keyPressSettings = {
   a_code: 65,
   a_char: "A",
@@ -91,9 +79,9 @@ var keyPressSettings = {
   skip_code: 83,
   skip_char: "S",
   left_code: 37,
-  left_char: "â†",
+  left_char: "â‡š",
   right_code: 39,
-  right_char: "â†’",
+  right_char: "â‡›",
   priorityOneEnabled: true,
   priorityOneProfile: "Default",
   priorityOneButton: "Skip",
@@ -105,21 +93,24 @@ var keyPressSettings = {
   priorityThreeButton: "Skip",
   defaultButton: "Skip",
 };
-
-/**********************************************************************
- *	Init script
- */
-// Enables caching of loaded javascript before loading resources
-
+var availableLangs = ["en", "es", "el", "ar", "it"];
 window.top.$.getScript(scriptURL + "lib/jstorage.js", function () {
   window.top.$.getScript(scriptURL + "resources.js", function () {
-    checkPage();
+    if (window.top.$.jStorage.get("language") == null) {
+      setDefaultLanguage();
+    }
+    window.top.$.getScript(scriptURL + "lang/" + window.top.$.jStorage.get("language") + ".js", function () {
+      console.log("init");
+      checkPage();
+    });
   });
-
   window.top.$.getScript(scriptURL + "notify.js");
 });
-
 function run() {
+  console.log("run");
+  checkVersion();
+  checkWorking();
+  setVersion();
   makeItPretty();
   showSettings();
   turnOnHotkeys();
@@ -128,10 +119,66 @@ function run() {
     applySettings();
   }
 }
-
-/**********************************************************************
- *	 Auto page loading and settings creation
- */
+function checkVersion() {
+  if (getVersion() != version) {
+    buttons = [{ text: "OK", callback: null, confirm: true }];
+    if (clearProfiles) {
+      var profileList = window.top.$.jStorage.get("profileList");
+      window.top.$.each(profileList, function (i, val) {
+        window.top.$.jStorage.deleteKey("profile:" + val);
+      });
+      window.top.$.jStorage.set("keyPressSettings", keyPressSettings);
+      Dialog.show(
+        "update_dialog",
+        "This script has recently been updated to version <span style='font-weight:bold;'>" +
+          version +
+          "</span> and in order for the new version to work, all profiles and settings must be reset. Sorry for any inconvenience.<br /><br/><a href='" +
+          updateNotesURL +
+          "' target='_blank'>See what's new</a>.</br>I removed the difference between the original and the Alt version of the script. Both are now equally fast and even faster than either script was before. Should you  enounter any issues, please contact me on the forum! </br></br>Enjoy!</br>Ibra Gonza II"
+      );
+    } else {
+      Dialog.show(
+        "update_dialog",
+        "This script has recently been updated to version <span style='font-weight:bold;'>" +
+          version +
+          "</span><br /><br/><a href='" +
+          updateNotesURL +
+          "' target='_blank'>See what's new</a>.</br>I removed the difference between the original and the Alt version of the script. Both are now equally fast and even faster than either script was before. Should you  enounter any issues, please contact me on the forum! </br></br>Enjoy!</br>Ibra Gonza II"
+      );
+    }
+  } else {
+  }
+}
+function checkWorking() {
+  var acknowledged = window.top.$.jStorage.get("working");
+  if (acknowledged == null) {
+    window.top.$.jStorage.set("working", false);
+  }
+  if (getVersion() != version) {
+    window.top.$.jStorage.set("working", false);
+  }
+  if (working == false && acknowledged == false) {
+    buttons = [{ text: "OK", callback: null, confirm: true }];
+    window.top.UI.ConfirmationBox(
+      "An error has been discovered in this version. You may continue testing the script if you haven't noticed the error.",
+      buttons,
+      false,
+      []
+    );
+    window.top.$.jStorage.set("working", true);
+  }
+}
+function setVersion() {
+  window.top.$.jStorage.set("version", version);
+}
+function getVersion() {
+  var ver = window.top.$.jStorage.get("version");
+  if (ver == undefined) {
+    setVersion();
+    return version;
+  }
+  return ver;
+}
 function showAllRows() {
   var pages = window.top.$.trim(
     window.top.$("#plunder_list_nav tr:first td:last").children().last().html().replace(/\D+/g, "")
@@ -147,7 +194,6 @@ function showAllRows() {
     getPage(parseInt(window.top.$("#start_page").val(), 10) - 1, pages);
   }, 1);
 }
-
 function getPage(i, pages) {
   if (i < pages) {
     changeHeader(
@@ -171,10 +217,9 @@ function getPage(i, pages) {
         console.log("Get page failed with error: " + error);
       },
       success: function (data) {
-        /*console.log(window.top.$(data));*/
         window.top
           .$("#plunder_list tr", data)
-          .slice(1)
+          .slice(2)
           .each(function () {
             window.top.$("#plunder_list tr:last").after("<tr>" + window.top.$(this).html() + "</tr>");
           });
@@ -196,18 +241,15 @@ function getPage(i, pages) {
     cansend = true;
   }
 }
-
 function changeHeader(string) {
   window.top.$("h3:first").html(string);
 }
-
 function highlightRows() {
   window.top.$("#am_widget_Farm table").each(function () {
     window.top.$("tr:even:gt(0) td", this).not("table:first").css("backgroundColor", "#FFF5DA");
     window.top.$("tr:odd:gt(0) td", this).not("table:first").css("backgroundColor", "#F0E2BE");
   });
 }
-
 function getNewVillage(way) {
   if (way == "n") window.top.UI.InfoMessage("Switching to next village...", 500);
   else window.top.UI.InfoMessage("Switching to previous village...", 500);
@@ -232,10 +274,7 @@ function getNewVillage(way) {
       var titlePat = /<\s*title\s*>([^<]+)<\/title\s*>/g;
       var titleMatch = titlePat.exec(data);
       var title = titleMatch[1];
-      var newGameData = window.top.$.parseJSON(
-        data.split("TribalWars.updateGameData(")[1].split(");")[0]
-      ); /* parse out the new game data */
-      /* TribalWars.updateGameData(newGameData); */ /* update the data - using a different method for now because Inno's funct errors */
+      var newGameData = window.top.$.parseJSON(data.split("TribalWars.updateGameData(")[1].split(");")[0]);
       window.top.game_data = newGameData;
       if (typeof history !== "undefined" && typeof history.pushState === "function") {
         history.pushState(
@@ -259,33 +298,15 @@ function getNewVillage(way) {
     },
   });
 }
-/*
- function getNewVillage(way){
- if(way == "n")
- window.top.UI.InfoMessage('Switching to next village...', 500);
- else
- window.top.UI.InfoMessage('Switching to previous village...', 500);
- window.onkeydown = function(){};
- cansend = false;
- filtersApplied = false;
- Timing.pause();
- var vlink = link[0] + way + window.top.game_data.village.id + link[1];
- window.location = vlink;
- }
- */
-
 function showSettings() {
-  //window.top.$('#plunder_list').hide();
-  //window.top.$('#plunder_list_nav').hide();
   window.top.$("head").append("<link type='text/css' rel='stylesheet' href='" + scriptURL + "css/style.css' />");
   window.top
     .$("#contentContainer h3")
     .eq(0)
     .after(
       window.top.$(
-        "<div class='vis'id='settingsDiv'><table class='settingsTable'><thead><tr><th colspan='5'class='vis'style='padding:0px;'><h4>" +
-          " " +
-          version +
+        "<div class='vis'id='settingsDiv'><table class='settingsTable'><thead><tr><th colspan='5'class='vis'style='padding:0px;'><h4> " +
+          scriptName +
           " - <a href='http://forum.tribalwars.net/showthread.php?266604-ntoombs19-s-FA-Filter'target='_blank'>" +
           filter_02 +
           "</a> - " +
@@ -402,9 +423,9 @@ function showSettings() {
           filter_50 +
           "</th></tr><tr><td rowspan='4'><table><tr class='hotkey_values'><td><a href='#'onclick='return setKeyEditMode(\"A\")'id='button_a'class='farm_icon farm_icon_a'></a></td><td><a href='#'onclick='return setKeyEditMode(\"B\")'id='button_b'class='farm_icon farm_icon_b'></a></td><td><a href='#'onclick='return setKeyEditMode(\"C\")'id='button_c'class='farm_icon farm_icon_c'></a></td><td><a href='#'onclick='return setKeyEditMode(\"Master\")'id='button_master'class='farm_icon farm_icon_m'></a></td></tr><tr class='hotkey_values'><td><input type='text'class='hotkey_value' READONLY id='hotkey_value_a'value='A'></td><td><input type='text'class='hotkey_value' READONLY id='hotkey_value_b'value='B'></td><td><input type='text'class='hotkey_value' READONLY id='hotkey_value_c'value='C'></td><td><input type='text'class='hotkey_value' READONLY id='hotkey_value_master'value='M'></td></tr><tr class='hotkey_values'><td colspan='2'><input class='btn tooltip'onclick='return setKeyEditMode(\"Skip\")'type='button'value='Skip'style='margin:0px 0px 0px 0px'title='" +
           filter_51 +
-          "'></td><td><input class='btn tooltip'onclick='return setKeyEditMode(\"Left\")'type='button'value='â‡š'style='margin:0px 0px 0px 0px'title='" +
+          "'></td><td><input class='btn tooltip'onclick='return setKeyEditMode(\"Left\")'type='button'value='Ã¢â€¡Å¡'style='margin:0px 0px 0px 0px'title='" +
           filter_52 +
-          "'></td><td><input class='btn tooltip'type='button'onclick='return setKeyEditMode(\"Right\")'value='â‡›'style='margin:0px 0px 0px 0px'title='" +
+          "'></td><td><input class='btn tooltip'type='button'onclick='return setKeyEditMode(\"Right\")'value='Ã¢â€¡â€º'style='margin:0px 0px 0px 0px'title='" +
           filter_53 +
           "'></td></tr><tr class='hotkey_values'><td colspan='2'><input type='text'class='hotkey_value' READONLY id='hotkey_value_skip'value='S'></td><td><input type='text'class='hotkey_value' READONLY id='hotkey_value_left'value='&#8592;'></td><td><input type='text'class='hotkey_value' READONLY id='hotkey_value_right'value='&#8594;'></td></tr></table></td><td><input type='checkbox' onchange='return updateKeypressSettings();' id='priorityOneEnabled'/></td><td colspan='3'>" +
           filter_54 +
@@ -506,29 +527,25 @@ function showSettings() {
       )
     );
   formatSettings();
+  addLanguages();
+  window.top.$("#language option[value='" + window.top.$.jStorage.get("language") + "']").attr("selected", "selected");
 }
-
 function formatSettings() {
   window.top.$("#all_none").bind("click", function () {
     window.top.$(this).closest("form").find(":checkbox").prop("checked", this.checked);
   });
-  // report instructions
   var reportHelp = window.top.$("#report_help");
   reportHelp.attr("title", instructions_01);
   window.top.UI.ToolTip(reportHelp);
-  // enable instrunctions
   var enableHelp = window.top.$("#enable_help");
   enableHelp.attr("title", instructions_02);
   window.top.UI.ToolTip(enableHelp);
-  // continent instrunctions
   var continentHelp = window.top.$("#continent_help");
   continentHelp.attr("title", instructions_03);
   window.top.UI.ToolTip(continentHelp);
-  // recent instrunctions
   var recentHelp = window.top.$("#recent_help");
   recentHelp.attr("title", instructions_04);
   window.top.UI.ToolTip(recentHelp);
-  // profile instrunctions
   var profileHelp = window.top.$("#profile_help");
   profileHelp.attr("title", instructions_05);
   window.top.UI.ToolTip(profileHelp);
@@ -537,26 +554,16 @@ function formatSettings() {
   fillMasterSettings();
   fillKeypressSettings();
 }
-
 function removeFirstPage() {
   window.top.$("#plunder_list tr:gt(0)").remove();
   window.top.$("#plunder_list_nav").hide();
 }
-
-/**********************************************************************
- *	 Table formatting
- */
 function customSendUnits(link, target_village, template_id, button) {
   if (!checkIfNextVillage()) {
     button.closest("tr").hide();
     link = window.top.$(link);
     if (link.hasClass("farm_icon_disabled")) return false;
-
-    var data = {
-      target: target_village,
-      template_id: template_id,
-      source: window.top.game_data.village.id,
-    };
+    var data = { target: target_village, template_id: template_id, source: window.top.game_data.village.id };
     window.top.$.post(
       window.top.Accountmanager.send_units_link,
       data,
@@ -571,7 +578,6 @@ function customSendUnits(link, target_village, template_id, button) {
           }
         } else {
           setLocalStorageRow(target_village);
-          //window.top.$('.farm_village_' + target_village).addClass('farm_icon_disabled');
           if (typeof window.top.$(button).prop("tooltipText") != "undefined") {
             var buttext = window.top.$(button).prop("tooltipText");
           }
@@ -588,15 +594,12 @@ function customSendUnits(link, target_village, template_id, button) {
     return false;
   }
 }
-
 function customSendUnitsFromReport(link, target_village, report_id, button) {
   if (!checkIfNextVillage()) {
     button.closest("tr").hide();
     link = window.top.$(link);
     if (link.hasClass("farm_icon_disabled")) return false;
-    var data = {
-      report_id: report_id,
-    };
+    var data = { report_id: report_id };
     window.top.$.post(
       window.top.Accountmanager.send_units_link_from_report,
       data,
@@ -622,7 +625,6 @@ function customSendUnitsFromReport(link, target_village, report_id, button) {
             window.top.UI.SuccessMessage(sep1.join(" "), 100);
             window.top.Accountmanager.farm.updateOwnUnitsAvailable(data.current_units);
           }
-          //window.top.$('.report_' + target_village + ' .farm_icon').addClass('farm_icon_disabled')
         }
       },
       "json"
@@ -630,7 +632,6 @@ function customSendUnitsFromReport(link, target_village, report_id, button) {
     return false;
   }
 }
-
 function setOnclick(button) {
   var clickFunction = button.find("a").attr("onclick");
   if (typeof clickFunction != "undefined") {
@@ -644,7 +645,6 @@ function setOnclick(button) {
     button.closest("tr").attr("name", window.top.$.trim(eachParameter[1]));
   }
 }
-
 function addTableInfo() {
   window.top.$("#am_widget_Farm tr th").slice(0, 1).after("<th></th>");
   window.top.$("#am_widget_Farm tr:not(:first-child)").each(function (i) {
@@ -680,7 +680,6 @@ function addTableInfo() {
       });
   });
 }
-
 function checkIfNextVillage() {
   current_units = window.top.Accountmanager.farm.current_units;
   if (userset[s.next_village_scouts]) {
@@ -702,27 +701,12 @@ function checkIfNextVillage() {
     }
   }
   if (userset[s.next_village_no_farms]) {
-    //if(window.top.$('#plunder_list tr:not(:first-child):visible').length == 0){
-    //	getNewVillage("n");
-    //	return true;
-    //}
-    //
-    if (
-      $("#plunder_list tr")
-        .filter(":visible")
-        .filter(function () {
-          return this.innerHTML.indexOf("td") > -1;
-        }).length == 0
-    ) {
+    if (window.top.$("#plunder_list tr:not(:first-child):visible").length == 0) {
       getNewVillage("n");
-      return !0;
+      return true;
     }
   }
 }
-
-/**********************************************************************
- *	Filtering table with settings
- */
 function applySettings() {
   if (!pagesLoaded) {
     setTimeout(showAllRows(), 1);
@@ -731,7 +715,6 @@ function applySettings() {
     applyFilters();
   }
 }
-
 function applyFilters() {
   window.top.$("#am_widget_Farm tr:gt(0)").each(function (i) {
     hideRow = checkRowToHide(window.top.$(this), userset);
@@ -762,7 +745,6 @@ function applyFilters() {
   }
   filtersApplied = true;
 }
-
 function checkRowToHide(row, profileArray) {
   hideRow = false;
   row.children("td").each(function (cell) {
@@ -799,21 +781,15 @@ function checkRowToHide(row, profileArray) {
   }
   return false;
 }
-
 function resetTable() {
   window.top.$("#plunder_list tr").each(function (i) {
     window.top.$(this).show();
   });
 }
-
 function setLocalStorageRow(village) {
   var localTitle = "sitter:" + sitter + ", village:" + village + ", world:" + getURL()[0];
   window.top.$.jStorage.set(localTitle, getCurrentGameTime());
 }
-
-/**********************************************************************
- *	Settings logic
- */
 function reportSettings(cell, profileArray) {
   if (cell.html().indexOf("blue") >= 0 && profileArray[s.blue]) {
     reason.push("Report is blue");
@@ -846,22 +822,18 @@ function reportSettings(cell, profileArray) {
     return;
   }
 }
-
 function haulSettings(cell, profileArray) {
   if (profileArray[s.enable_hauls]) {
-    // Hides full hauls
     if (cell.html().indexOf("max_loot/1") >= 0 && profileArray[s.full]) {
       reason.push("Haul is full");
       hideRow = true;
       return;
     }
-    // Hides partial hauls
     if (cell.html().indexOf("max_loot/0") >= 0 && profileArray[s.partial]) {
       reason.push("Haul is partial");
       hideRow = true;
       return;
     }
-    // Hides scout reports
     if (cell.html().indexOf("max_loot") == -1 && profileArray[s.full]) {
       reason.push("No haul graphic");
       hideRow = true;
@@ -869,7 +841,6 @@ function haulSettings(cell, profileArray) {
     }
   }
 }
-
 function hideRecentlyFarmed(cell, profileArray) {
   if (profileArray[s.hide_recent_farms]) {
     var village = cell.closest("tr").attr("name");
@@ -897,7 +868,6 @@ function hideRecentlyFarmed(cell, profileArray) {
     }
   }
 }
-
 function attackSettings(cell, profileArray) {
   var numAttacks;
   var attackImg = cell.find("img");
@@ -932,7 +902,6 @@ function attackSettings(cell, profileArray) {
     }
   }
 }
-
 function continentSettings(cell, profileArray) {
   var continent = cell.find("a").html();
   if (typeof continent != "undefined") {
@@ -950,7 +919,6 @@ function continentSettings(cell, profileArray) {
     }
   }
 }
-
 function hideTime(cell, profileArray) {
   if (profileArray[s.enable_time]) {
     var t1 = currentGameTime;
@@ -975,7 +943,6 @@ function hideTime(cell, profileArray) {
     }
   }
 }
-
 function scoutReportSettings(cell, profileArray) {
   var total;
   if (profileArray[s.enable_scout]) {
@@ -987,7 +954,6 @@ function scoutReportSettings(cell, profileArray) {
       var iron = parseInt(cell.children("span").eq(2).html().replace(/\D+/g, ""));
       total = wood + clay + iron;
     }
-
     switch (profileArray[s.scout_report_operator]) {
       case "greater_than":
         if (total > parseInt(profileArray[s.haul_value])) {
@@ -1013,7 +979,6 @@ function scoutReportSettings(cell, profileArray) {
     }
   }
 }
-
 function wallSettings(cell, profileArray) {
   if (profileArray[s.enable_walls]) {
     var wallLvl = parseInt(cell.html());
@@ -1045,7 +1010,6 @@ function wallSettings(cell, profileArray) {
     }
   }
 }
-
 function distanceSettings(cell, profileArray) {
   if (profileArray[s.enable_distances]) {
     var distanceLvl = cell.html();
@@ -1074,8 +1038,6 @@ function distanceSettings(cell, profileArray) {
     }
   }
 }
-
-//deletes local storage for recently farmed rows
 function deleteRecentlyFarmed() {
   window.top.$("#am_widget_Farm tr:gt(0)").each(function (i) {
     window.top
@@ -1092,15 +1054,11 @@ function deleteRecentlyFarmed() {
       });
   });
 }
-
-//gets game time to compare to reports
 function getCurrentGameTime() {
   var serverTime = window.top.$("#serverTime").html().split(":");
   var serverDate = window.top.$("#serverDate").html().split("/");
   return new Date(serverDate[2], serverDate[1] - 1, serverDate[0], serverTime[0], serverTime[1], serverTime[2], 0);
 }
-
-//helper function for time filters
 function getVillageAttackedTime(cell) {
   var time = cell.html();
   var cellTime = time.split(" ");
@@ -1143,10 +1101,6 @@ function getVillageAttackedTime(cell) {
     return new Date(year, month, day, hours, minutes, seconds, 0);
   }
 }
-
-/**********************************************************************
- *	Settings profiles functionality
- */
 function loadDefaultProfile() {
   if (window.top.$.jStorage.get("profile:" + profile_10) == null) {
     window.top.$.jStorage.set("profile:" + profile_10, [
@@ -1199,7 +1153,6 @@ function loadDefaultProfile() {
   loadProfile(profile_10);
   window.top.$("#settingsProfile").val(profile_10);
 }
-
 function setDefaultProfile() {
   if (window.top.$("#settingsProfile").val() == profile_10) {
     var newProfile = confirm(dialog_02);
@@ -1214,7 +1167,6 @@ function setDefaultProfile() {
     window.top.$.jStorage.set("profile:" + profile_10, profile);
   }
 }
-
 function fillProfileList() {
   var profileList = window.top.$.jStorage.get("profileList");
   window.top.$.each(profileList, function (i, val) {
@@ -1222,7 +1174,6 @@ function fillProfileList() {
   });
   window.top.$("#settingsProfile").val(window.top.$.jStorage.get("DefaultProfile"));
 }
-
 function createProfile() {
   var profileName = prompt(dialog_03 + ":");
   if (window.top.$.inArray(profileName, window.top.$.jStorage.get("profileList")) != -1) {
@@ -1238,24 +1189,24 @@ function createProfile() {
   var profiles;
   if (profileName != null && profileName != "") {
     var settings = [];
-    settings.push(window.top.$("#start_page").val()); //0
-    settings.push(window.top.$("#end_page").val()); //1
-    settings.push(window.top.$("#order_by").val()); //2
-    settings.push(window.top.$("#direction").val()); //3
-    settings.push(window.top.$("#all_none").prop("checked")); //4
-    settings.push(window.top.$("#blue").prop("checked")); //5
-    settings.push(window.top.$("#green").prop("checked")); //6
-    settings.push(window.top.$("#yellow").prop("checked")); //7
-    settings.push(window.top.$("#red_yellow").prop("checked")); //8
-    settings.push(window.top.$("#red_blue").prop("checked")); //9
-    settings.push(window.top.$("#red").prop("checked")); //10
-    settings.push(window.top.$("#hide_recent_farms").prop("checked")); //11
-    settings.push(window.top.$("#sent_time_filter").val()); //12
-    settings.push(window.top.$("#hide_recent_time").val()); //13
-    settings.push(window.top.$("#enable_hauls").prop("checked")); //14
-    settings.push(window.top.$("#full").prop("checked")); //15
-    settings.push(window.top.$("#partial").prop("checked")); //16
-    settings.push(window.top.$("#enable_attacks").prop("checked")); //17
+    settings.push(window.top.$("#start_page").val());
+    settings.push(window.top.$("#end_page").val());
+    settings.push(window.top.$("#order_by").val());
+    settings.push(window.top.$("#direction").val());
+    settings.push(window.top.$("#all_none").prop("checked"));
+    settings.push(window.top.$("#blue").prop("checked"));
+    settings.push(window.top.$("#green").prop("checked"));
+    settings.push(window.top.$("#yellow").prop("checked"));
+    settings.push(window.top.$("#red_yellow").prop("checked"));
+    settings.push(window.top.$("#red_blue").prop("checked"));
+    settings.push(window.top.$("#red").prop("checked"));
+    settings.push(window.top.$("#hide_recent_farms").prop("checked"));
+    settings.push(window.top.$("#sent_time_filter").val());
+    settings.push(window.top.$("#hide_recent_time").val());
+    settings.push(window.top.$("#enable_hauls").prop("checked"));
+    settings.push(window.top.$("#full").prop("checked"));
+    settings.push(window.top.$("#partial").prop("checked"));
+    settings.push(window.top.$("#enable_attacks").prop("checked"));
     settings.push(window.top.$("#attack_operator").val());
     settings.push(window.top.$("#attack_value").val());
     settings.push(window.top.$("#enable_walls").prop("checked"));
@@ -1284,15 +1235,12 @@ function createProfile() {
     profileList.push(profileName);
     window.top.$.jStorage.set("profileList", profileList);
     window.top.$("#settingsProfile").append("<option value='" + profileName + "'>" + profileName + "</option>");
-
     window.top.$("#priorityOneProfile").append("<option value='" + profileName + "'>" + profileName + "</option>");
     window.top.$("#priorityTwoProfile").append("<option value='" + profileName + "'>" + profileName + "</option>");
     window.top.$("#priorityThreeProfile").append("<option value='" + profileName + "'>" + profileName + "</option>");
-
     window.top.$("#settingsProfile").val(profileName);
   }
 }
-
 function loadProfile(profile) {
   var settings = window.top.$.jStorage.get("profile:" + profile);
   userset = settings;
@@ -1338,13 +1286,11 @@ function loadProfile(profile) {
   window.top.$("#farming_troops_left").val(settings[39]);
   window.top.$("#next_village_units").prop("checked", settings[40]);
 }
-
 function changeProfile(profile) {
   loadProfile(profile);
   resetTable();
   applyFilters();
 }
-
 function deleteProfile() {
   var profileName = window.top.$("#settingsProfile").val();
   if (profileName == profile_10) {
@@ -1361,7 +1307,6 @@ function deleteProfile() {
     loadDefaultProfile(profile_10);
   }
 }
-
 function updateProfile() {
   var profileName = window.top.$("#settingsProfile").val();
   var settings = [];
@@ -1409,7 +1354,6 @@ function updateProfile() {
   window.top.$.jStorage.set("profile:" + profileName, settings);
   userset = settings;
 }
-
 function exportProfile() {
   var profileName = window.top.$("#settingsProfile").val();
   var settings = window.top.$.jStorage.get("profile:" + profileName);
@@ -1422,7 +1366,6 @@ function exportProfile() {
     );
   }
 }
-
 function importProfile() {
   var profileSettings = prompt(dialog_10 + ":", dialog_11);
   profileSettings = profileSettings.split(",");
@@ -1446,10 +1389,6 @@ function importProfile() {
     loadProfile(profileName);
   }
 }
-
-/**********************************************************************
- *	Key Commands
- */
 window.top.$(document).off();
 function hotkeysOnOff() {
   window.top.$("#settingsBody tr:lt(9) input,#settingsBody tr:lt(9) select").focusin(function () {
@@ -1459,123 +1398,111 @@ function hotkeysOnOff() {
     turnOnHotkeys();
   });
 }
-
 function turnOnHotkeys() {
   window.onkeydown = function (e) {
     if (editingKey) {
       editKey(e);
     } else {
-      var row = window.top
-        .$("#plunder_list tr")
-        .filter(":visible")
-        .filter(function () {
-          let accessiblePiece = typeof this["textContent"] != "undefined" ? "textContent" : "innerText";
-          var txt = this[accessiblePiece].trim();
-          return txt.replace(/[^\w]+/gim, "").length > 0;
-        })
-        .eq(1);
+      var row = window.top.$("#plunder_list tr").filter(":visible").eq(1);
       var aButton = row.children("td").eq(9).children("a");
       var bButton = row.children("td").eq(10).children("a");
       var cButton = row.children("td").eq(11).children("a");
       switch (e.which) {
-        case keycodes.a: // a
+        case keycodes.a:
           tryClick(aButton);
           break;
-        case keycodes.b: // b
+        case keycodes.b:
           tryClick(bButton);
           break;
-        case keycodes.c: // c
+        case keycodes.c:
           tryClick(cButton);
           break;
-        case keycodes.skip: // s
+        case keycodes.skip:
           row.hide();
           break;
-        case keycodes.master: // m
+        case keycodes.master:
           if (cansend && filtersApplied) selectMasterButton(row);
           break;
-        case keycodes.left: // left
+        case keycodes.left:
           getNewVillage("p");
           break;
-        case keycodes.right: // right
+        case keycodes.right:
           getNewVillage("n");
           break;
         default:
-          return; // exit this handler for other keys
+          return;
       }
     }
-    e.preventDefault(); // prevent the default action (scroll / move caret)
+    e.preventDefault();
   };
 }
-
 function tryClick(button) {
   if (cansend && filtersApplied) {
     if (!checkIfNextVillage()) {
+      console.log(button.html());
       if (button.hasClass("farm_icon_disabled") || button.html() == undefined) {
         window.top.UI.ErrorMessage("That button is not selectable. Skipping row...", 500);
         button.closest("tr").hide();
       } else {
         button.click();
         if (userset[s.next_village_scouts] || userset[s.next_village_farming_troops]) {
-          doTime(201);
+          doTime(200);
         } else {
-          doTime(201);
+          doTime(200);
         }
       }
     }
   }
 }
-
 function doTime(millsec) {
   cansend = false;
   setTimeout(function () {
     cansend = true;
   }, millsec);
 }
-
 function editKey(e) {
   if ((e.keyCode <= 37 && e.keyCode >= 40) || (e.keyCode <= 48 && e.keyCode >= 90)) {
     window.top.UI.ErrorMessage("You can only enter letters, numbers, or arrows. Plese try another key.", 1500);
   } else {
     var keyToChar = String.fromCharCode(e.keyCode);
     if (e.keyCode == 37) {
-      keyToChar = "â†";
+      keyToChar = "Ã¢â€ Â";
     }
     if (e.keyCode == 38) {
-      keyToChar = "â†‘";
+      keyToChar = "Ã¢â€ â€˜";
     }
     if (e.keyCode == 39) {
-      keyToChar = "â†’";
+      keyToChar = "Ã¢â€ â€™";
     }
     if (e.keyCode == 40) {
-      keyToChar = "â†“";
+      keyToChar = "Ã¢â€ â€œ";
     }
-
     switch (keyToEdit) {
-      case "A": //A
+      case "A":
         keycodes.a = e.keyCode;
         window.top.$("#hotkey_value_a").val(keyToChar);
         break;
-      case "B": //B
+      case "B":
         keycodes.b = e.keyCode;
         window.top.$("#hotkey_value_b").val(keyToChar);
         break;
-      case "C": //C
+      case "C":
         keycodes.c = e.keyCode;
         window.top.$("#hotkey_value_c").val(keyToChar);
         break;
-      case "Master": //Master
+      case "Master":
         keycodes.master = e.keyCode;
         window.top.$("#hotkey_value_master").val(keyToChar);
         break;
-      case "Skip": //Skip
+      case "Skip":
         keycodes.skip = e.keyCode;
         window.top.$("#hotkey_value_skip").val(keyToChar);
         break;
-      case "Left": //Left
+      case "Left":
         keycodes.left = e.keyCode;
         window.top.$("#hotkey_value_left").val(keyToChar);
         break;
-      case "Right": //Right
+      case "Right":
         keycodes.right = e.keyCode;
         window.top.$("#hotkey_value_right").val(keyToChar);
         break;
@@ -1587,7 +1514,6 @@ function editKey(e) {
     editingKey = false;
   }
 }
-
 function updateKeypressSettings() {
   keyPressSettings.a_code = keycodes.a;
   keyPressSettings.a_char = window.top.$("#hotkey_value_a").val();
@@ -1615,7 +1541,6 @@ function updateKeypressSettings() {
   keyPressSettings.defaultButton = window.top.$("#defaultButton").val();
   window.top.$.jStorage.set("keyPressSettings", keyPressSettings);
 }
-
 function fillKeypressSettings() {
   if (window.top.$.jStorage.get("keyPressSettings") == null) {
     window.top.$.jStorage.set("keyPressSettings", keyPressSettings);
@@ -1646,7 +1571,6 @@ function fillKeypressSettings() {
   window.top.$("#priorityThreeButton").val(keyPressSettings.priorityThreeButton);
   window.top.$("#defaultButton").val(keyPressSettings.defaultButton);
 }
-
 function setKeyEditMode(n) {
   editingKey = true;
   keyToEdit = n;
@@ -1658,7 +1582,6 @@ function setKeyEditMode(n) {
   );
   return false;
 }
-
 function fillMasterSettings() {
   var profileList = window.top.$.jStorage.get("profileList");
   window.top.$.each(profileList, function (i, val) {
@@ -1667,7 +1590,6 @@ function fillMasterSettings() {
     window.top.$("#priorityThreeProfile").append("<option value='" + val + "'>" + val + "</option>");
   });
 }
-
 function selectMasterButton(row) {
   var buttonToClick;
   var p1 = window.top.$.jStorage.get("profile:" + keyPressSettings.priorityOneProfile);
@@ -1701,84 +1623,74 @@ function selectMasterButton(row) {
       break;
   }
 }
-
+function setDefaultLanguage() {
+  var url = getURL();
+  if (url.length == 3) url.shift();
+  var domain = url.join(".");
+  switch (domain) {
+    case "fyletikesmaxes.gr":
+      window.top.$.jStorage.set("language", "el");
+      break;
+    case "tribals.it":
+      window.top.$.jStorage.set("language", "it");
+      break;
+    case "guerrastribales.es":
+      window.top.$.jStorage.set("language", "es");
+      break;
+    case "tribalwars.ae":
+      window.top.$.jStorage.set("language", "ar");
+      break;
+    default:
+      window.top.$.jStorage.set("language", "en");
+      break;
+  }
+}
+function loadLanguage(lang) {
+  window.top.$.jStorage.set("language", lang);
+  var profileList = window.top.$.jStorage.get("profileList");
+  var defaultProfile = window.top.$.jStorage.get("profile:" + profile_10);
+  if (window.top.$.inArray(lang, availableLangs) < 0) {
+    lang = "en";
+  }
+  var langFile = scriptURL + "lang/" + lang + ".js";
+  window.top.$.getScript(langFile, function () {
+    window.top.$("#settingsDiv").remove();
+    profileList[0] = profile_10;
+    window.top.$.jStorage.set("profileList", profileList);
+    window.top.$.jStorage.set("profile:" + profile_10, defaultProfile);
+    changeHeader(filter_40);
+    showSettings();
+  });
+}
+function addLanguages() {
+  window.top.$("#language").append("<option value='en'>English</option>");
+  window.top.$("#language").append("<option value='el'>ÃŽâ€¢ÃŽÂ»ÃŽÂ»ÃŽÂ·ÃŽÂ½ÃŽÂ¹ÃŽÂºÃŽÂ¬</option>");
+  window.top.$("#language").append("<option value='it'>Italiano</option>");
+  window.top.$("#language").append("<option value='es'>EspaÃƒÂ±ol</option>");
+  window.top.$("#language").append("<option value='ar'>Ã˜Â§Ã™â€žÃ™â€žÃ˜ÂºÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â±Ã˜Â¨Ã™Å Ã˜Â©</option>");
+}
+function parseBool(value) {
+  return typeof value === "undefined" ? false : value.replace(/^\s+|\s+window.top.$/g, "").toLowerCase() === "true";
+}
 function getURL() {
   var domain = window.location.hostname;
   domain = domain.split(".");
   return domain;
 }
-
 function checkPage() {
+  console.log("checkPage");
   if (!(window.top.game_data.screen === "am_farm")) {
-    if (!isPreparedToStart()) {
-      window["_waiting_for_ogbobby"] = window.setInterval(function () {
-        if (isPreparedToStart()) {
-          window.clearInterval(window["_waiting_for_ogbobby"]);
-          getFA();
-        } else {
-          console.log("Waiting for OG Bobby");
-        }
-      }, 240);
-    } else {
-      console.log("Already prepared to start!");
-      getFA();
-    }
+    getFA();
   } else {
     run();
   }
 }
-// start insert
-function isPreparedToStart() {
-  if (typeof window["_ogbobbyjohnson"] == "undefined") {
-    var AccountManagerLocation = window.top.$.jStorage.get("AccountManagerLocation");
-    //var sAMJSLoc=JSON.parse(AccountManagerLocation)['loc'];
-    var jobjAcctMngrLoc = AccountManagerLocation != null ? JSON.parse(AccountManagerLocation) : null;
-    if (
-      AccountManagerLocation == null ||
-      typeof jobjAcctMngrLoc["fetched_at"] == "undefined" ||
-      jobjAcctMngrLoc["fetched_at"] <= new Date().getTime() - 10800000
-    ) {
-      // If undefined or the file's stored location > 3 hrs old (in ms)
-      window["_ogbobbyjohnson"] = null;
-      $.get(
-        "https://" +
-          window.top.location.host +
-          "/game.php?screen=am_farm" +
-          (typeof window.top.game_data.village.id != "undefined" ? "&village=" + window.top.game_data.village.id : ""),
-        function (data) {
-          window["_ogbobbyjohnson"] = data;
-        }
-      );
-    } else {
-      return true;
-    }
-    return false;
-  } else {
-    if (window["_ogbobbyjohnson"] != null) {
-      aAccountManagerLocation = window["_ogbobbyjohnson"].match(
-        /(?<=('|"))https?:\/\/[^'"]+?Accountmanager\.js[^'"]*/gim
-      );
-      if (aAccountManagerLocation.length > 0) {
-        sAccountManagerLocation = aAccountManagerLocation[0];
-        iFetchedAt = new Date().getTime();
-        AccountManagerLocation = { loc: sAccountManagerLocation, fetched_at: iFetchedAt };
-        window.top.$.jStorage.set("AccountManagerLocation", JSON.stringify(AccountManagerLocation));
-      } else alert("Failed to find the location fo the AccountManager script!");
-      return true;
-    } else {
-      // Continue waiting
-    }
-  }
-  return false;
-}
-// end insert
 function getFA() {
+  console.log("getFA");
   fadeThanksToCheese();
   openLoader();
   var vlink = link[0] + window.top.game_data.village.id + link[1];
-  var AccountManagerLocation = window.top.$.jStorage.get("AccountManagerLocation");
-  var sAMJSLoc = JSON.parse(AccountManagerLocation)["loc"];
-  window.top.$.getScript(sAMJSLoc, function () {
+  window.top.$.getScript("https://" + window.top.location.host + "/js/game/Accountmanager.js", function () {
     window.top.$.ajax({
       type: "GET",
       url: vlink,
@@ -1793,10 +1705,7 @@ function getFA() {
         var titlePat = /<\s*title\s*>([^<]+)<\/title\s*>/g;
         var titleMatch = titlePat.exec(data);
         var title = titleMatch[1];
-        var newGameData = window.top.$.parseJSON(
-          data.split("TribalWars.updateGameData(")[1].split(");")[0]
-        ); /* parse out the new game data */
-        /* TribalWars.updateGameData(newGameData); */ /* update the data - using a different method for now because Inno's funct errors */
+        var newGameData = window.top.$.parseJSON(data.split("TribalWars.updateGameData(")[1].split(");")[0]);
         window.top.game_data = newGameData;
         if (typeof history !== "undefined" && typeof history.pushState === "function") {
           history.pushState(
@@ -1811,20 +1720,12 @@ function getFA() {
         window.top.$("head").find("title").html(title);
         window.top.$("#fader").remove();
         window.top.$("#loaders").remove();
+        console.log("getFA");
         run();
       },
     });
   });
 }
-/*
- function getFA(){
- fadeThanksToCheese();
- openLoader();
- var vlink = link[0] + window.top.game_data.village.id + link[1];
- window.location = vlink;
- }
- */
-
 function fadeThanksToCheese() {
   var fader = window.top.document.createElement("div");
   fader.id = "fader";
@@ -1838,7 +1739,6 @@ function fadeThanksToCheese() {
   fader.style.zIndex = "12000";
   window.top.document.body.appendChild(fader);
 }
-
 function openLoader() {
   var widget = window.top.document.createElement("div");
   widget.id = "loaders";
@@ -1853,9 +1753,9 @@ function openLoader() {
   window.top.$(widget).append(window.top.$("<img src='graphic/throbber.gif' height='24' width='24'></img>"));
   window.top.$("#contentContainer").append(window.top.$(widget));
 }
-
 function makeItPretty() {
   window.top.$(".row_a").css("background-color", "rgb(216, 255, 216)");
+  window.top.$("#plunder_list tr").eq(0).remove();
   window.top
     .$("#plunder_list")
     .find("tr:gt(0)")
@@ -1869,8 +1769,8 @@ function makeItPretty() {
       }
     });
   hideStuffs();
+  console.log("makeItPretty");
 }
-
 function hideStuffs() {
   window.top.$("#plunder_list").hide();
   window.top.$("#plunder_list_nav").hide();
@@ -1897,7 +1797,6 @@ function hideStuffs() {
     );
   window.top.$("#plunder_list_filters").hide();
 }
-
 function uglyHider(linker) {
   var basd;
   if (window.top.$("#settingsBody").length > 0) {
