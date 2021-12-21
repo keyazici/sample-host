@@ -526,8 +526,6 @@ function showSettings() {
       )
     );
   formatSettings();
-  addLanguages();
-  window.top.$("#language option[value='" + window.top.$.jStorage.get("language") + "']").attr("selected", "selected");
 }
 function formatSettings() {
   window.top.$("#all_none").bind("click", function () {
@@ -1660,13 +1658,6 @@ function loadLanguage(lang) {
     changeHeader(filter_40);
     showSettings();
   });
-}
-function addLanguages() {
-  window.top.$("#language").append("<option value='en'>English</option>");
-  window.top.$("#language").append("<option value='el'>ÃŽâ€¢ÃŽÂ»ÃŽÂ»ÃŽÂ·ÃŽÂ½ÃŽÂ¹ÃŽÂºÃŽÂ¬</option>");
-  window.top.$("#language").append("<option value='it'>Italiano</option>");
-  window.top.$("#language").append("<option value='es'>EspaÃƒÂ±ol</option>");
-  window.top.$("#language").append("<option value='ar'>Ã˜Â§Ã™â€žÃ™â€žÃ˜ÂºÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â±Ã˜Â¨Ã™Å Ã˜Â©</option>");
 }
 function parseBool(value) {
   return typeof value === "undefined" ? false : value.replace(/^\s+|\s+window.top.$/g, "").toLowerCase() === "true";
