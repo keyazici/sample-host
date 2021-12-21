@@ -311,7 +311,6 @@ function showSettings() {
           filter_02 +
           "</a> - " +
           filter_42 +
-          ": <select id='language'style='margin:0px;'onchange='loadLanguage(window.top.$(&quot;#language&quot;).val())'></select><span style='font-size:10px;float:right;font-weight:normal;font-style:normal'>" +
           filter_03 +
           " <a href='http://forum.tribalwars.net/member.php?22739-ntoombs19'target='_blank'>ntoombs19</a>&nbsp;<div class='vis'style='float:right;text-align:center;line-height:100%;width:12px;height:12px;margin:0px 0px 0px 0px;position:relative;background-color:tan;opacity:.7'><a href='#'num='2'onclick='uglyHider(window.top.$(this));return false;'>-</a></div></span></h4></th></tr></thead><tbody id='settingsBody'><tr><td class='col1'style='min-width:200px'><span>" +
           filter_04 +
@@ -423,9 +422,9 @@ function showSettings() {
           filter_50 +
           "</th></tr><tr><td rowspan='4'><table><tr class='hotkey_values'><td><a href='#'onclick='return setKeyEditMode(\"A\")'id='button_a'class='farm_icon farm_icon_a'></a></td><td><a href='#'onclick='return setKeyEditMode(\"B\")'id='button_b'class='farm_icon farm_icon_b'></a></td><td><a href='#'onclick='return setKeyEditMode(\"C\")'id='button_c'class='farm_icon farm_icon_c'></a></td><td><a href='#'onclick='return setKeyEditMode(\"Master\")'id='button_master'class='farm_icon farm_icon_m'></a></td></tr><tr class='hotkey_values'><td><input type='text'class='hotkey_value' READONLY id='hotkey_value_a'value='A'></td><td><input type='text'class='hotkey_value' READONLY id='hotkey_value_b'value='B'></td><td><input type='text'class='hotkey_value' READONLY id='hotkey_value_c'value='C'></td><td><input type='text'class='hotkey_value' READONLY id='hotkey_value_master'value='M'></td></tr><tr class='hotkey_values'><td colspan='2'><input class='btn tooltip'onclick='return setKeyEditMode(\"Skip\")'type='button'value='Skip'style='margin:0px 0px 0px 0px'title='" +
           filter_51 +
-          "'></td><td><input class='btn tooltip'onclick='return setKeyEditMode(\"Left\")'type='button'value='â‡š'style='margin:0px 0px 0px 0px'title='" +
+          "'></td><td><input class='btn tooltip'onclick='return setKeyEditMode(\"Left\")'type='button'value='&lArr;'style='margin:0px 0px 0px 0px'title='" +
           filter_52 +
-          "'></td><td><input class='btn tooltip'type='button'onclick='return setKeyEditMode(\"Right\")'value='â‡›'style='margin:0px 0px 0px 0px'title='" +
+          "'></td><td><input class='btn tooltip'type='button'onclick='return setKeyEditMode(\"Right\")'value='&rArr;'style='margin:0px 0px 0px 0px'title='" +
           filter_53 +
           "'></td></tr><tr class='hotkey_values'><td colspan='2'><input type='text'class='hotkey_value' READONLY id='hotkey_value_skip'value='S'></td><td><input type='text'class='hotkey_value' READONLY id='hotkey_value_left'value='&#8592;'></td><td><input type='text'class='hotkey_value' READONLY id='hotkey_value_right'value='&#8594;'></td></tr></table></td><td><input type='checkbox' onchange='return updateKeypressSettings();' id='priorityOneEnabled'/></td><td colspan='3'>" +
           filter_54 +
