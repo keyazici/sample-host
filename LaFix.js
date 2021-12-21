@@ -284,7 +284,6 @@ function showSettings() {
     .after(
       window.top.$(
         "<div class='vis'id='settingsDiv'><table class='settingsTable'><thead><tr><th colspan='5'class='vis'style='padding:0px;'><h4>" +
-          filter_01 +
           " " +
           version +
           " - <a href='http://forum.tribalwars.net/showthread.php?266604-ntoombs19-s-FA-Filter'target='_blank'>" +
